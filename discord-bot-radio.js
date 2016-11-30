@@ -55,7 +55,7 @@ function playRadio() {
 
         icy.get(url, function (res) {
 
-            console.log(res.headers);
+            if(config.DEBUG) console.log(res.headers);
 
             res.on('metadata', function (metadata) {
                 meta = icy.parse(metadata);
@@ -178,9 +178,10 @@ function processCommand(message, command, args) {
                         console.log(error);
                     }
                     else {
-                        text += "\n\nAuf YouTube anhören: https://www.youtube.com/watch?v=" + result.items[0].id.videoId;
-                        console.log(result.items[0].id.videoId);
-                        console.log(JSON.stringify(result, null, 2));
+                        if (result.items.length == 1) {
+                            text += "\n\nAuf YouTube anhören: https://www.youtube.com/watch?v=" + result.items[0].id.videoId;
+                            if(config.DEBUG) console.log(JSON.stringify(result, null, 2));
+                        }
                     }
 
                     return respond(message, text, false);
