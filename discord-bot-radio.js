@@ -33,8 +33,6 @@ bot.on('ready', function () {
         if (config.DEBUG) bot.channels.find('id', config.TEXT_CH).sendMessage('I am ready, running version `' + version + '`!');
     });
 
-    console.log(bot.guilds);
-
     if (!bot.guilds.exists('id', config.SERVER_ID)) {
         console.log('Bot is not connected to the selected server!');
         process.exit();
