@@ -44,7 +44,7 @@ bot.on('ready', function () {
 });
 
 function playRadio() {
-    const streamOptions = {volume: 0.05};
+    const streamOptions = {volume: 0.1};
 
     var channel = server.channels.find('id', config.VOICE_CH);
 
