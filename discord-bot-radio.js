@@ -140,7 +140,7 @@ function processCommand(message, command, args) {
         case 'radio':
         case 'rv':
             (function () {
-                respond(message, "Running DiscordRadio.de by DerAtrox, Version: `" + version + "`.\nAktuellster Commit: https://github.com/DerAtrox/DiscordRadio/commit/" + version);
+                respond(message, "Running DiscordRadio by DerAtrox, Version: `" + version + "`.\nAktuellster Commit: https://github.com/DerAtrox/DiscordRadio/commit/" + version);
             })();
             break;
         case 'nowplaying':
