@@ -49,25 +49,25 @@ function playRadio() {
     var channel = server.channels.find('id', config.VOICE_CH);
 
     channel.join().then(function (connection) {
-            var url = config.STREAM;
+        var url = config.STREAM;
 
-            const icy = require('icy');
+        const icy = require('icy');
 
-            icy.get(url, function (res) {
+        icy.get(url, function (res) {
 
-                console.log(res.headers);
+            console.log(res.headers);
 
-                res.on('metadata', function (metadata) {
-                    meta = icy.parse(metadata);
-                    bot.user.setGame(meta.StreamTitle);
-                });
-
-                connection.playStream(res, streamOptions);
+            res.on('metadata', function (metadata) {
+                meta = icy.parse(metadata);
+                bot.user.setGame(meta.StreamTitle);
             });
 
+            connection.playStream(res, streamOptions);
+        });
 
-            stream = connection;
-        })
+
+        stream = connection;
+    })
         .catch(console.error);
 }
 
@@ -126,7 +126,7 @@ function respond(message, response, mention, pm) {
     if (pm) {
         message.author.sendMessage(response);
     } else {
-        if(mention) {
+        if (mention) {
             message.reply(response);
         } else {
             message.channel.sendMessage(response);
@@ -146,22 +146,48 @@ function processCommand(message, command, args) {
         case 'nowplaying':
         case 'np':
             (function () {
-                if(stream == null) {
+                if (stream == null) {
                     respond(message, 'Der Stream ist aktuell nicht aktiv!', false);
                     return;
                 }
 
-                if(meta == null) {
+                if (meta == null) {
                     respond(message, 'Keine Metadaten gefunden!', false);
                     return;
                 }
 
+                var text;
+
                 var metaS = meta.StreamTitle.split(' - ');
-                if(metaS.length == 2) {
-                    respond(message, 'Derzeit läuft **' + metaS[1] + '** von **' + metaS[0] + '**.', false);
+                if (metaS.length == 2) {
+                    text = 'Derzeit läuft **' + metaS[1] + '** von **' + metaS[0] + '**.';
                 } else {
-                    respond(message, 'Derzeit läuft **' + meta + '**.', false);
+                    text = 'Derzeit läuft **' + meta + '**.';
                 }
+
+                var YouTube = require('youtube-node');
+
+                var youTube = new YouTube();
+
+
+                youTube.setKey(config.YOUTUBE_KEY);
+
+
+                youTube.search(meta.StreamTitle.replace(' - ', ' '), 1, function (error, result) {
+                    if (error) {
+                        console.log(error);
+                    }
+                    else {
+                        text += "\n\nAuf YouTube anhören: https://www.youtube.com/watch?v=" + result.items[0].id.videoId;
+                        console.log(result.items[0].id.videoId);
+                        console.log(JSON.stringify(result, null, 2));
+                    }
+
+                    return respond(message, text, false);
+                });
+
+
+                //respond(message, text, false);
             })();
             break;
     }

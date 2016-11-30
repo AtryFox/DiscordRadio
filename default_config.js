@@ -9,6 +9,8 @@ module.exports = {
     VOICE_CH: '',
     // URL TO RADIO STREAM (Icecast/SHOUTcast)
     STREAM: '',
+    // YOUTUBE DATA API KEY
+    YOUTUBE_KEY: '',
     // SEND MORE DEBUG MESSAGES
     DEBUG: false
 };
