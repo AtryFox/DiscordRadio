@@ -4,9 +4,9 @@ module.exports = {
     // SERVER ID
     SERVER_ID: '',
     // CHANNEL FOR INFO MESSAGES
-    TEXT_CHANNEL: '',
+    TEXT_CH: '',
     // CHANNEL FOR RADIO STREAM
-    VOICE_CHANNEL: '',
+    VOICE_CH: '',
     // URL TO RADIO STREAM (Icecast/SHOUTcast)
     STREAM: '',
     // SEND MORE DEBUG MESSAGES
