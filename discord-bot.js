@@ -5,7 +5,8 @@ var Discord = require('discord.js'),
     server,
     version,
     exec,
-    stream = null;
+    stream = null,
+    meta = null;
 
 /* VERSION */
 function getVersion(callback) {
@@ -39,13 +40,14 @@ bot.on('ready', function () {
 
     server = bot.guilds.find('id', config.SERVER_ID);
 
-    stream = playRadio();
+    playRadio();
 });
 
 function playRadio() {
     const streamOptions = {volume: 0.05};
 
     var channel = server.channels.find('id', config.VOICE_CH);
+
     channel.join().then(function (connection) {
             var url = config.STREAM;
 
@@ -56,12 +58,15 @@ function playRadio() {
                 console.log(res.headers);
 
                 res.on('metadata', function (metadata) {
-                    var parsed = icy.parse(metadata);
-                    bot.user.setGame(parsed.StreamTitle);
+                    meta = icy.parse(metadata);
+                    bot.user.setGame(meta.StreamTitle);
                 });
 
-                return connection.playStream(res, streamOptions);
+                connection.playStream(res, streamOptions);
             });
+
+
+            stream = connection;
         })
         .catch(console.error);
 }
@@ -109,22 +114,11 @@ bot.on('messageUpdate', function (oldMessage, newMessage) {
     onMessage(newMessage);
 });
 
-/* PERMISSIONS */
-function Permission(checker) {
-    return {
-        check: function (user) {
-            if (!server.members.exists('id', user.id)) {
-                return false;
-            }
+function respond(message, response, mention, pm) {
+    if (typeof mention === 'undefined') {
+        mention = true;
+    }
 
-            var member = server.members.find('id', user.id);
-
-            return checker(member);
-        }
-    };
-}
-
-function respond(message, response, pm) {
     if (typeof pm === 'undefined') {
         pm = false;
     }
@@ -132,7 +126,11 @@ function respond(message, response, pm) {
     if (pm) {
         message.author.sendMessage(response);
     } else {
-        message.reply(response);
+        if(mention) {
+            message.reply(response);
+        } else {
+            message.channel.sendMessage(response);
+        }
     }
 }
 
@@ -142,13 +140,28 @@ function processCommand(message, command, args) {
         case 'radio':
         case 'rv':
             (function () {
-                respond(message, "Running DiscordRadio.de by @DerAtrox#1257, Version: `" + version + "`.\nAktuellster Commit: https://github.com/DerAtrox/DiscordRadio/commit/" + version);
+                respond(message, "Running DiscordRadio.de by DerAtrox, Version: `" + version + "`.\nAktuellster Commit: https://github.com/DerAtrox/DiscordRadio/commit/" + version);
             })();
             break;
         case 'nowplaying':
         case 'np':
             (function () {
-                respond(message, "Running DiscordRadio.de by @DerAtrox#1257, Version: `" + version + "`.\nAktuellster Commit: https://github.com/DerAtrox/DiscordRadio/commit/" + version);
+                if(stream == null) {
+                    respond(message, 'Der Stream ist aktuell nicht aktiv!', false);
+                    return;
+                }
+
+                if(meta == null) {
+                    respond(message, 'Keine Metadaten gefunden!', false);
+                    return;
+                }
+
+                var metaS = meta.StreamTitle.split(' - ');
+                if(metaS.length == 2) {
+                    respond(message, 'Derzeit läuft **' + metaS[1] + '** von **' + metaS[0] + '**.', false);
+                } else {
+                    respond(message, 'Derzeit läuft **' + meta + '**.', false);
+                }
             })();
             break;
     }
