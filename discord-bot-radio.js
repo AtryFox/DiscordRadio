@@ -15,8 +15,8 @@ function getVersion(callback) {
 
     exec('git rev-parse --short=4 HEAD', function (error, version) {
         if (error) {
-            console.log(getDateTime() + 'Error getting version', error);
-            return callback(getDateTime()  + 'unknown');
+            console.log('Error getting version', error);
+            return callback('unknown');
         }
 
         callback(version.trim());
@@ -26,7 +26,7 @@ function getVersion(callback) {
 /* BOT EVENTS */
 bot.on('ready', function () {
     online();
-    console.log(getDateTime() + 'I am ready!');
+    console.log('I am ready!');
     getVersion(function (v) {
         version = v;
         bot.user.setGame('version ' + version);
@@ -35,7 +35,7 @@ bot.on('ready', function () {
     });
 
     if (!bot.guilds.exists('id', config.SERVER_ID)) {
-        console.log(getDateTime() + 'Bot is not connected to the selected server!');
+        console.log('Bot is not connected to the selected server!');
         process.exit();
     }
 
@@ -51,7 +51,7 @@ function playRadio() {
             stream = null;
         }
     } catch (e) {
-        console.log(getDateTime() + 'Could not end stream ' + e);
+        console.log('Could not end stream ' + e);
     }
 
     const streamOptions = {volume: 0.1};
@@ -84,14 +84,15 @@ function playRadio() {
             });
 
             stream.on('error', function (error) {
-                console.log(getDateTime()  + 'Stream error ' + error);
+                console.log(getDateTime()  + 'Stream error ');
+                console.log(error);
             });
         });
 
 
         vconnection = connection;
     })
-        .catch(getDateTime() + console.error);
+        .catch(console.error);
 }
 
 function onMessage(message) {
@@ -198,12 +199,12 @@ function processCommand(message, command, args) {
 
                 youTube.search(meta.StreamTitle.replace(' - ', ' '), 1, function (error, result) {
                     if (error) {
-                        console.log(getDateTime() + error);
+                        console.log(error);
                     }
                     else {
                         if (result.items.length == 1) {
                             text += "\n\nAuf YouTube anhören: https://www.youtube.com/watch?v=" + result.items[0].id.videoId;
-                            if (config.DEBUG) console.log(getDateTime() + JSON.stringify(result, null, 2));
+                            if (config.DEBUG) console.log(JSON.stringify(result, null, 2));
                         }
                     }
 
