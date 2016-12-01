@@ -5,6 +5,7 @@ var Discord = require('discord.js'),
     server,
     version,
     exec,
+    vconnection = null,
     stream = null,
     meta = null;
 
@@ -14,8 +15,8 @@ function getVersion(callback) {
 
     exec('git rev-parse --short=4 HEAD', function (error, version) {
         if (error) {
-            console.log('Error getting version', error);
-            return callback('unknown');
+            console.log(getDateTime() + 'Error getting version', error);
+            return callback(getDateTime()  + 'unknown');
         }
 
         callback(version.trim());
@@ -25,7 +26,7 @@ function getVersion(callback) {
 /* BOT EVENTS */
 bot.on('ready', function () {
     online();
-    console.log('I am ready!');
+    console.log(getDateTime() + 'I am ready!');
     getVersion(function (v) {
         version = v;
         bot.user.setGame('version ' + version);
@@ -34,7 +35,7 @@ bot.on('ready', function () {
     });
 
     if (!bot.guilds.exists('id', config.SERVER_ID)) {
-        console.log('Bot is not connected to the selected server!');
+        console.log(getDateTime() + 'Bot is not connected to the selected server!');
         process.exit();
     }
 
@@ -44,6 +45,15 @@ bot.on('ready', function () {
 });
 
 function playRadio() {
+    try {
+        if (stream != null) {
+            stream.end();
+            stream = null;
+        }
+    } catch (e) {
+        console.log(getDateTime() + 'Could not end stream ' + e);
+    }
+
     const streamOptions = {volume: 0.1};
 
     var channel = server.channels.find('id', config.VOICE_CH);
@@ -55,20 +65,33 @@ function playRadio() {
 
         icy.get(url, function (res) {
 
-            if(config.DEBUG) console.log(res.headers);
+            if (config.DEBUG) console.log(res.headers);
 
             res.on('metadata', function (metadata) {
                 meta = icy.parse(metadata);
                 bot.user.setGame(meta.StreamTitle);
             });
 
-            connection.playStream(res, streamOptions);
+            stream = connection.playStream(res, streamOptions);
+
+            stream.on('start', function () {
+                console.log(getDateTime()  + 'Stream started');
+            });
+
+            stream.on('end', function () {
+                console.log(getDateTime()  + 'Stream ended, restarting');
+                playRadio();
+            });
+
+            stream.on('error', function (error) {
+                console.log(getDateTime()  + 'Stream error ' + error);
+            });
         });
 
 
-        stream = connection;
+        vconnection = connection;
     })
-        .catch(console.error);
+        .catch(getDateTime() + console.error);
 }
 
 function onMessage(message) {
@@ -146,7 +169,7 @@ function processCommand(message, command, args) {
         case 'nowplaying':
         case 'np':
             (function () {
-                if (stream == null) {
+                if (vconnection == null) {
                     respond(message, 'Der Stream ist aktuell nicht aktiv!', false);
                     return;
                 }
@@ -175,12 +198,12 @@ function processCommand(message, command, args) {
 
                 youTube.search(meta.StreamTitle.replace(' - ', ' '), 1, function (error, result) {
                     if (error) {
-                        console.log(error);
+                        console.log(getDateTime() + error);
                     }
                     else {
                         if (result.items.length == 1) {
                             text += "\n\nAuf YouTube anhören: https://www.youtube.com/watch?v=" + result.items[0].id.videoId;
-                            if(config.DEBUG) console.log(JSON.stringify(result, null, 2));
+                            if (config.DEBUG) console.log(getDateTime() + JSON.stringify(result, null, 2));
                         }
                     }
 
@@ -202,6 +225,10 @@ process.on('SIGINT', function () {
     process.exit();
 
 });
+
+function getDateTime() {
+    return "[" + new Date().toLocaleString() + "] ";
+}
 
 function idle() {
     bot.user.setStatus('idle');
