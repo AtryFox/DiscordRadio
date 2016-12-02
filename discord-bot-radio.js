@@ -80,7 +80,10 @@ function playRadio() {
 
             stream.on('end', function () {
                 console.log(getDateTime()  + 'Stream ended, restarting');
-                playRadio();
+
+                setTimeout(function () {
+                    playRadio();
+                }, 2000)
             });
 
             stream.on('error', function (error) {
