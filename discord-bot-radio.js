@@ -187,19 +187,18 @@ function processCommand(message, command, args) {
 
                 var metaS = meta.StreamTitle.split(' - ');
                 if (metaS.length == 2) {
-                    text = 'Derzeit läuft **' + metaS[1] + '** von **' + metaS[0] + '**.';
+                    text = '🎶 Derzeit läuft **' + metaS[1] + '** von **' + metaS[0] + '**.';
                 } else {
-                    text = 'Derzeit läuft **' + meta + '**.';
+                    text = '🎶 Derzeit läuft **' + meta + '**.';
                 }
 
                 var YouTube = require('youtube-node');
 
                 var youTube = new YouTube();
 
-
                 youTube.setKey(config.YOUTUBE_KEY);
 
-
+                youTube.addParam('type', 'video');
                 youTube.search(meta.StreamTitle.replace(' - ', ' '), 1, function (error, result) {
                     if (error) {
                         console.log(error);
@@ -213,9 +212,6 @@ function processCommand(message, command, args) {
 
                     return respond(message, text, false);
                 });
-
-
-                //respond(message, text, false);
             })();
             break;
     }
