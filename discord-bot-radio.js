@@ -41,12 +41,12 @@ bot.on('ready', function () {
 
     server = bot.guilds.find('id', config.SERVER_ID);
 
-    playRadio();
+    playRadio(false);
 });
 
-function playRadio() {
+function playRadio(endOld) {
     try {
-        if (stream != null) {
+        if (endOld) {
             stream.end();
             stream = null;
         }
@@ -82,8 +82,8 @@ function playRadio() {
                 console.log(getDateTime()  + 'Stream ended, restarting');
 
                 setTimeout(function () {
-                    playRadio();
-                }, 2000)
+                    playRadio(false);
+                }, 2000);
             });
 
             stream.on('error', function (error) {
