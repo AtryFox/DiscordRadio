@@ -58,12 +58,13 @@ function playRadio(endOld) {
 
     var channel = server.channels.find('id', config.VOICE_CH);
 
+
     channel.join().then(function (connection) {
         var url = config.STREAM;
 
         const icy = require('icy');
 
-        icy.get(url, function (res) {
+        icy.get({url: url, useragent: 'Bronies.de Discord Bot'}, function (res) {
 
             if (config.DEBUG) console.log(res.headers);
 
@@ -75,11 +76,11 @@ function playRadio(endOld) {
             stream = connection.playStream(res, streamOptions);
 
             stream.on('start', function () {
-                console.log(getDateTime()  + 'Stream started');
+                console.log(getDateTime() + 'Stream started');
             });
 
             stream.on('end', function () {
-                console.log(getDateTime()  + 'Stream ended, restarting');
+                console.log(getDateTime() + 'Stream ended, restarting');
 
                 setTimeout(function () {
                     playRadio(false);
@@ -87,7 +88,7 @@ function playRadio(endOld) {
             });
 
             stream.on('error', function (error) {
-                console.log(getDateTime()  + 'Stream error ');
+                console.log(getDateTime() + 'Stream error ');
                 console.log(error);
             });
         });
