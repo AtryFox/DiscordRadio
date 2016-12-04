@@ -7,7 +7,8 @@ var Discord = require('discord.js'),
     exec,
     vconnection = null,
     stream = null,
-    meta = null;
+    meta = null,
+    endmanual = false;
 
 /* VERSION */
 function getVersion(callback) {
@@ -26,7 +27,7 @@ function getVersion(callback) {
 /* BOT EVENTS */
 bot.on('ready', function () {
     online();
-    console.log('I am ready!');
+    console.log(getDateTime() + 'I am ready!');
     getVersion(function (v) {
         version = v;
         bot.user.setGame('version ' + version);
@@ -41,14 +42,14 @@ bot.on('ready', function () {
 
     server = bot.guilds.find('id', config.SERVER_ID);
 
-    playRadio(false);
+    playRadio();
 });
 
-function playRadio(endOld) {
+function playRadio() {
     try {
-        if (endOld) {
+        if (stream != null) {
+            endmanual = true;
             stream.end();
-            stream = null;
         }
     } catch (e) {
         console.log('Could not end stream ' + e);
@@ -80,11 +81,15 @@ function playRadio(endOld) {
             });
 
             stream.on('end', function () {
-                console.log(getDateTime() + 'Stream ended, restarting');
-
-                setTimeout(function () {
-                    playRadio(false);
-                }, 2000);
+                if (endmanual) {
+                    console.log(getDateTime() + 'Stream ended');
+                    endmanual = false;
+                } else {
+                    console.log(getDateTime() + 'Stream ended, restarting');
+                    setTimeout(function () {
+                        playRadio();
+                    }, 2000);
+                }
             });
 
             stream.on('error', function (error) {
@@ -92,7 +97,6 @@ function playRadio(endOld) {
                 console.log(error);
             });
         });
-
 
         vconnection = connection;
     })
