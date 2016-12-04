@@ -76,6 +76,7 @@ function playRadio() {
 
             stream.on('start', function () {
                 console.log(getDateTime() + 'Stream started');
+                endmanual = false;
             });
 
             stream.on('end', function () {
