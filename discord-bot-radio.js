@@ -61,11 +61,9 @@ function playRadio() {
 
 
     channel.join().then(function (connection) {
-        var url = config.STREAM;
-
         const icy = require('icy');
 
-        icy.get({url: url, useragent: 'Bronies.de Discord Bot'}, function (res) {
+        icy.get({url: config.STREAM, useragent: config.USER_AGENT}, function (res) {
 
             if (config.DEBUG) console.log(res.headers);
 

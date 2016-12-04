@@ -11,6 +11,8 @@ module.exports = {
     STREAM: '',
     // YOUTUBE DATA API KEY
     YOUTUBE_KEY: '',
+    // USERAGENT TO USE FOR CONNECTION
+    USER_AGENT: '',
     // SEND MORE DEBUG MESSAGES
     DEBUG: false
 };
