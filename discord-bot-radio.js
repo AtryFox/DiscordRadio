@@ -62,8 +62,12 @@ function playRadio() {
 
     channel.join().then(function (connection) {
         const icy = require('icy');
+        const url = require('url');
 
-        icy.get({url: config.STREAM, userAgent: config.USER_AGENT}, function (res) {
+        var opts = url.parse(config.STREAM);
+        opts.headers = { 'User-Agent': config.USER_AGENT };
+
+        icy.get(opts, function (res) {
 
             if (config.DEBUG) console.log(res.headers);
 
