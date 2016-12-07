@@ -46,14 +46,7 @@ bot.on('ready', function () {
 });
 
 function playRadio() {
-    try {
-        if (stream != null) {
-            endmanual = true;
-            stream.end();
-        }
-    } catch (e) {
-        console.log('Could not end stream ' + e);
-    }
+    endStream()
 
     const streamOptions = {volume: 0.1};
 
@@ -61,6 +54,13 @@ function playRadio() {
 
 
     channel.join().then(function (connection) {
+        connection.on('disconnect', function () {
+            endStream()
+            setTimeout(function () {
+                playRadio();
+            }, 2000);
+        });
+
         const icy = require('icy');
         const url = require('url');
 
@@ -104,6 +104,17 @@ function playRadio() {
         vconnection = connection;
     })
         .catch(console.error);
+}
+
+function endStream() {
+    try {
+        if (stream != null) {
+            endmanual = true;
+            stream.end();
+        }
+    } catch (e) {
+        console.log('Could not end stream ' + e);
+    }
 }
 
 function onMessage(message) {
