@@ -54,18 +54,30 @@ function playRadio() {
 
 
     channel.join().then(function (connection) {
+        console.log(getDateTime() + 'Voice connect');
+
         connection.on('disconnect', function () {
-            endStream()
+            console.log(getDateTime() + 'Voice disconnect');
+
+            endStream();
             setTimeout(function () {
                 playRadio();
             }, 2000);
+        });
+
+        connection.on('error', function (err) {
+            console.log(getDateTime() + 'Voice error ' + err);
+        });
+
+        connection.on('warn', function (err) {
+            console.log(getDateTime() + 'Voice warning ' + err);
         });
 
         const icy = require('icy');
         const url = require('url');
 
         var opts = url.parse(config.STREAM);
-        opts.headers = { 'User-Agent': config.USER_AGENT };
+        opts.headers = {'User-Agent': config.USER_AGENT};
 
         icy.get(opts, function (res) {
 
@@ -231,6 +243,28 @@ function processCommand(message, command, args) {
 
                     return respond(message, text, false);
                 });
+            })();
+            break;
+        case 'playradio':
+        case 'pr':
+            (function () {
+                if(!server.members.exists('id', message.author.id)) {
+                    console.log(getDateTime() + '!pr: Nutzer nicht Member des Servers! ' + message.author.username + '#' + message.author.discriminator);
+                    return;
+                }
+
+                if(!server.roles.exists('name', config.PLAYRADIO_MINRANK)) {
+                    console.log(getDateTime() + '!pr: Rang nicht gefunden! ' + config.PLAYRADIO_MINRANK);
+                    return;
+                }
+
+                if (server.members.find('id', message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK)) < 0) {
+                    return respond(message, 'Nicht genügend Rechte!', true, false);
+                }
+
+                playRadio();
+                console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
+                return respond(message, 'Radio Stream wird neugestartet.', true, false);
             })();
             break;
     }
