@@ -69,10 +69,6 @@ function playRadio() {
             console.log(getDateTime() + 'Voice error ' + err);
         });
 
-        connection.on('warn', function (err) {
-            console.log(getDateTime() + 'Voice warning ' + err);
-        });
-
         const icy = require('icy');
         const url = require('url');
 
