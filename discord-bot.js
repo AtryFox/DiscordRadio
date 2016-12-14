@@ -8,7 +8,8 @@ var Discord = require('discord.js'),
     vconnection = null,
     stream = null,
     meta = null,
-    endmanual = false;
+    endmanual = false,
+    prTimeout = false;
 
 /* VERSION */
 function getVersion(callback) {
@@ -257,6 +258,25 @@ function processCommand(message, command, args) {
                 if (server.members.find('id', message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK)) < 0) {
                     return respond(message, 'Nicht genügend Rechte!', true, false);
                 }
+
+                if(server.roles.exists('name', config.PLAYRADIO_MINRANK_FORCE)) {
+                    if (server.members.find('id', message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK_FORCE )) >= 0) {
+                        playRadio();
+                        console.log(getDateTime() + '!pr: Stream restarted Mod by ' + message.author.username + '#' + message.author.discriminator);
+                        return respond(message, 'Radio Stream wird neugestartet.', true, false);
+                    }
+                }
+
+                if(prTimeout) {
+                    return respond(message, 'Radio Stream wurde bereits vor kurzem neugestartet, versuche es bitte später erneut.', true, false);
+                }
+
+                console.log(prTimeout);
+
+                prTimeout = true;
+                setTimeout(() => {
+                    prTimeout = false;
+                }, 60000 * 5);
 
                 playRadio();
                 console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
