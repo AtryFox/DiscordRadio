@@ -1,4 +1,4 @@
-var Discord = require('discord.js'),
+let Discord = require('discord.js'),
     config = require('./config'),
     token = config.TOKEN,
     bot = new Discord.Client(),
@@ -47,11 +47,11 @@ bot.on('ready', function () {
 });
 
 function playRadio() {
-    endStream()
+    endStream();
 
     const streamOptions = {volume: 0.1};
 
-    var channel = server.channels.find('id', config.VOICE_CH);
+    const channel = server.channels.find('id', config.VOICE_CH);
 
 
     channel.join().then(function (connection) {
@@ -73,7 +73,7 @@ function playRadio() {
         const icy = require('icy');
         const url = require('url');
 
-        var opts = url.parse(config.STREAM);
+        const opts = url.parse(config.STREAM);
         opts.headers = {'User-Agent': config.USER_AGENT};
 
         icy.get(opts, function (res) {
@@ -136,14 +136,14 @@ function onMessage(message) {
     }
 
     function handleCommand() {
-        var match = /^[\/!]([a-zA-Z]+).*$/.exec(message.content);
+        let match = /^[\/!]([a-zA-Z]+).*$/.exec(message.content);
 
         if (message.channel.type == 'dm') {
             match = /^[\/!]?([a-zA-Z]+).*$/.exec(message.content);
         }
 
         if (match) {
-            var args = message.content.split(' ').splice(1);
+            const args = message.content.split(' ').splice(1);
 
             processCommand(message, match[1].toLowerCase(), args);
         }
@@ -211,18 +211,18 @@ function processCommand(message, command, args) {
                     return;
                 }
 
-                var text;
+                let text;
 
-                var metaS = meta.StreamTitle.split(' - ');
+                let metaS = meta.StreamTitle.split(' - ');
                 if (metaS.length == 2) {
                     text = '🎶 Derzeit läuft **' + metaS[1] + '** von **' + metaS[0] + '**.';
                 } else {
                     text = '🎶 Derzeit läuft **' + meta + '**.';
                 }
 
-                var YouTube = require('youtube-node');
+                const YouTube = require('youtube-node');
 
-                var youTube = new YouTube();
+                const youTube = new YouTube();
 
                 youTube.setKey(config.YOUTUBE_KEY);
 
@@ -245,12 +245,12 @@ function processCommand(message, command, args) {
         case 'playradio':
         case 'pr':
             (function () {
-                if(!server.members.exists('id', message.author.id)) {
+                if (!server.members.exists('id', message.author.id)) {
                     console.log(getDateTime() + '!pr: Nutzer nicht Member des Servers! ' + message.author.username + '#' + message.author.discriminator);
                     return;
                 }
 
-                if(!server.roles.exists('name', config.PLAYRADIO_MINRANK)) {
+                if (!server.roles.exists('name', config.PLAYRADIO_MINRANK)) {
                     console.log(getDateTime() + '!pr: Rang nicht gefunden! ' + config.PLAYRADIO_MINRANK);
                     return;
                 }
@@ -259,26 +259,34 @@ function processCommand(message, command, args) {
                     return respond(message, 'Nicht genügend Rechte!', true, false);
                 }
 
-                if(server.roles.exists('name', config.PLAYRADIO_MINRANK_FORCE)) {
-                    if (server.members.find('id', message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK_FORCE )) >= 0) {
+                if (server.roles.exists('name', config.PLAYRADIO_MINRANK_FORCE)) {
+                    if (server.members.find('id', message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK_FORCE)) >= 0) {
                         playRadio();
                         console.log(getDateTime() + '!pr: Stream restarted Mod by ' + message.author.username + '#' + message.author.discriminator);
                         return respond(message, 'Radio Stream wird neugestartet.', true, false);
                     }
                 }
 
-                if(prTimeout) {
+                if (prTimeout) {
                     return respond(message, 'Radio Stream wurde bereits vor kurzem neugestartet, versuche es bitte später erneut.', true, false);
                 }
-
-                console.log(prTimeout);
 
                 prTimeout = true;
                 setTimeout(() => {
                     prTimeout = false;
                 }, 60000 * 5);
 
-                vconnection.disconnect();
+                if (vconnection == null) {
+                    playRadio();
+                } else {
+                    try {
+                        vconnection.disconnect();
+                    } catch (e) {
+                        console.log(getDateTime() + 'Could not disconnect voice. Trying playRadio');
+                        playRadio();
+                    }
+                }
+
                 console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
                 return respond(message, 'Radio Stream wird neugestartet.', true, false);
             })();
