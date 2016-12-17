@@ -278,7 +278,7 @@ function processCommand(message, command, args) {
                     prTimeout = false;
                 }, 60000 * 5);
 
-                playRadio();
+                vconnection.disconnect();
                 console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
                 return respond(message, 'Radio Stream wird neugestartet.', true, false);
             })();
