@@ -8,7 +8,7 @@ let Discord = require('discord.js'),
     vconnection = null,
     stream = null,
     meta = null,
-    endmanual = false,
+    endManual = false,
     prTimeout = false;
 
 /* VERSION */
@@ -33,34 +33,44 @@ bot.on('ready', function () {
         version = v;
         bot.user.setGame('version ' + version);
 
-        if (config.DEBUG) bot.channels.find('id', config.TEXT_CH).sendMessage('I am ready, running version `' + version + '`!');
+        if (config.DEBUG) bot.channels.get(config.TEXT_CH).sendMessage('I am ready, running version `' + version + '`!');
     });
 
-    if (!bot.guilds.exists('id', config.SERVER_ID)) {
+    if (!bot.guilds.has(config.SERVER_ID)) {
         console.log('Bot is not connected to the selected server!');
         process.exit();
     }
 
-    server = bot.guilds.find('id', config.SERVER_ID);
+    server = bot.guilds.get(config.SERVER_ID);
 
     playRadio();
 });
 
 function playRadio() {
-    endStream();
+    endManual = true;
+    bot.voiceConnections.filter((connection) => {
+        return connection.channel.guild.id == config.SERVER_ID;
+    }).forEach((connection) => {
+        connection.disconnect();
+    });
+    endManual = false;
 
     const streamOptions = {volume: 0.1};
 
-    const channel = server.channels.find('id', config.VOICE_CH);
-
+    const channel = server.channels.get(config.VOICE_CH);
 
     channel.join().then(function (connection) {
+        let disconnectTriggerd = false;
+
         console.log(getDateTime() + 'Voice connect');
 
         connection.on('disconnect', function () {
             console.log(getDateTime() + 'Voice disconnect');
 
-            endStream();
+            if (disconnectTriggerd || endManual) return;
+
+            disconnectTriggerd = true;
+
             setTimeout(function () {
                 playRadio();
             }, 2000);
@@ -93,15 +103,8 @@ function playRadio() {
             });
 
             stream.on('end', function () {
-                if (endmanual) {
-                    console.log(getDateTime() + 'Stream ended');
-                    endmanual = false;
-                } else {
-                    console.log(getDateTime() + 'Stream ended, restarting');
-                    setTimeout(function () {
-                        playRadio();
-                    }, 2000);
-                }
+                //connection.disconnect();
+                console.log(getDateTime() + 'Stream ended');
             });
 
             stream.on('error', function (error) {
@@ -113,17 +116,6 @@ function playRadio() {
         vconnection = connection;
     })
         .catch(console.error);
-}
-
-function endStream() {
-    try {
-        if (stream != null) {
-            endmanual = true;
-            stream.end();
-        }
-    } catch (e) {
-        console.log('Could not end stream ' + e);
-    }
 }
 
 function onMessage(message) {
@@ -149,10 +141,10 @@ function onMessage(message) {
         }
     }
 
-    if (server.channels.exists('id', message.channel.id)) {
+    if (server.channels.has(message.channel.id)) {
         handleCommand();
     } else {
-        if (server.members.exists('id', message.author.id)) {
+        if (server.members.has(message.author.id)) {
             handleCommand();
         } else {
             return message.channel.sendMessage('You have to be member ' + server.name + '!');
@@ -245,7 +237,7 @@ function processCommand(message, command, args) {
         case 'playradio':
         case 'pr':
             (function () {
-                if (!server.members.exists('id', message.author.id)) {
+                if (!server.members.has(message.author.id)) {
                     console.log(getDateTime() + '!pr: Nutzer nicht Member des Servers! ' + message.author.username + '#' + message.author.discriminator);
                     return;
                 }
@@ -255,12 +247,12 @@ function processCommand(message, command, args) {
                     return;
                 }
 
-                if (server.members.find('id', message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK)) < 0) {
+                if (server.members.get(message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK)) < 0) {
                     return respond(message, 'Nicht genügend Rechte!', true, false);
                 }
 
                 if (server.roles.exists('name', config.PLAYRADIO_MINRANK_FORCE)) {
-                    if (server.members.find('id', message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK_FORCE)) >= 0) {
+                    if (server.members.get(message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK_FORCE)) >= 0) {
                         playRadio();
                         console.log(getDateTime() + '!pr: Stream restarted Mod by ' + message.author.username + '#' + message.author.discriminator);
                         return respond(message, 'Radio Stream wird neugestartet.', true, false);
