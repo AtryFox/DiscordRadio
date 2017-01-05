@@ -65,13 +65,15 @@ function playRadio() {
         console.log(getDateTime() + 'Voice connect');
 
         connection.on('disconnect', function () {
+            if (disconnectTriggerd) return;
+
             console.log(getDateTime() + 'Voice disconnect');
 
-            if (disconnectTriggerd || endManual) return;
+            if (endManual) return;
 
             disconnectTriggerd = true;
 
-            setTimeout(function () {
+            bot.setTimeout(function () {
                 playRadio();
             }, 2000);
         });
