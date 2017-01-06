@@ -252,7 +252,12 @@ function processCommand(message, command, args) {
 
                 if (server.roles.exists('name', config.PLAYRADIO_MINRANK_FORCE)) {
                     if (server.members.get(message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK_FORCE)) >= 0) {
-                        playRadio();
+                        try {
+                            vconnection.disconnect();
+                        } catch (e) {
+                            console.log(getDateTime() + 'Could not disconnect voice. Trying playRadio');
+                            playRadio();
+                        }
                         console.log(getDateTime() + '!pr: Stream restarted Mod by ' + message.author.username + '#' + message.author.discriminator);
                         return respond(message, 'Radio Stream wird neugestartet.', true, false);
                     }
@@ -266,16 +271,12 @@ function processCommand(message, command, args) {
                 setTimeout(() => {
                     prTimeout = false;
                 }, 60000 * 5);
-
-                if (vconnection == null) {
+                
+                try {
+                    vconnection.disconnect();
+                } catch (e) {
+                    console.log(getDateTime() + 'Could not disconnect voice. Trying playRadio');
                     playRadio();
-                } else {
-                    try {
-                        vconnection.disconnect();
-                    } catch (e) {
-                        console.log(getDateTime() + 'Could not disconnect voice. Trying playRadio');
-                        playRadio();
-                    }
                 }
 
                 console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
