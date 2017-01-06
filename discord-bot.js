@@ -65,11 +65,9 @@ function playRadio() {
         console.log(getDateTime() + 'Voice connect');
 
         connection.on('disconnect', function () {
-            if (disconnectTriggerd) return;
-
             console.log(getDateTime() + 'Voice disconnect');
 
-            if (endManual) return;
+            if (disconnectTriggerd || endManual) return;
 
             disconnectTriggerd = true;
 
