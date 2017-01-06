@@ -73,7 +73,7 @@ function playRadio() {
 
             disconnectTriggerd = true;
 
-            bot.setTimeout(function () {
+            setTimeout(function () {
                 playRadio();
             }, 2000);
         });
