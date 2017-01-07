@@ -205,6 +205,8 @@ function processCommand(message, command, args) {
         case 'radio':
         case 'rv':
             (function () {
+                const linkLastCommit = 'https://github.com/DerAtrox/DiscordRadio/commit/' + bot.versionInfo.version;
+
                 let embed = new Discord.RichEmbed({
                     author: {
                         name: server.name,
@@ -224,7 +226,7 @@ function processCommand(message, command, args) {
                         },
                         {
                             name: 'Letzter Commit',
-                            value: 'https://github.com/DerAtrox/DiscordRadio/commit/' + bot.versionInfo.version,
+                            value: `[${linkLastCommit}](${linkLastCommit})`,
                             inline: true
                         }
                     ],
