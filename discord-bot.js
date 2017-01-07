@@ -31,7 +31,7 @@ function getVersion(callback) {
                 info.message = message.trim();
             }
 
-            exec('git log -1 --date=short --pretty=format:%cI', function (error, timestamp) {
+            exec('git log -1 --date=short --pretty=format:%ci', function (error, timestamp) {
                 if (error) {
                     console.log('Error getting creation time', error);
                 } else {
@@ -236,7 +236,7 @@ function processCommand(message, command, args) {
                 }
 
                 if('timestamp' in bot.versionInfo) {
-                    embed.addField('Erstellt', (moment(bot.versionInfo.timestamp).locale('de').fromNow()), true);
+                    embed.addField('Erstellt', (moment(bot.versionInfo.timestamp, 'YYYY-MM-DD HH:mm:ss Z').locale('de').fromNow()), true);
                 }
 
                 message.channel.sendEmbed(embed);
