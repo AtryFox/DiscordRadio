@@ -1,10 +1,11 @@
 let Discord = require('discord.js'),
     config = require('./config'),
+    moment = require('moment'),
     token = config.TOKEN,
     bot = new Discord.Client(),
     server,
     version,
-    exec,
+    exec = require('child_process').exec,
     vconnection = null,
     stream = null,
     meta = null,
@@ -13,15 +14,33 @@ let Discord = require('discord.js'),
 
 /* VERSION */
 function getVersion(callback) {
-    exec = exec || require('child_process').exec;
+    let info = {};
 
     exec('git rev-parse --short=4 HEAD', function (error, version) {
         if (error) {
-            console.log('Error getting version', error);
-            return callback('unknown');
+            bot.log('Error getting version', error);
+            info.version = 'unknown';
+        } else {
+            info.version = version.trim();
         }
 
-        callback(version.trim());
+        exec('git log -1 --pretty=%B', function (error, message) {
+            if (error) {
+                bot.log('Error getting commit message', error);
+            } else {
+                info.message = message.trim();
+            }
+
+            exec('git log -1 --date=short --pretty=format:%cI', function (error, timestamp) {
+                if (error) {
+                    console.log('Error getting creation time', error);
+                } else {
+                    info.timestamp = timestamp;
+                }
+
+                callback(info);
+            });
+        });
     });
 }
 
@@ -29,11 +48,11 @@ function getVersion(callback) {
 bot.on('ready', function () {
     online();
     console.log(getDateTime() + 'I am ready!');
-    getVersion(function (v) {
-        version = v;
-        bot.user.setGame('version ' + version);
+    getVersion(info => {
+        bot.versionInfo = info;
+        bot.user.setGame('version ' + bot.versionInfo.version);
 
-        if (config.DEBUG) bot.channels.get(config.TEXT_CH).sendMessage('I am ready, running version `' + version + '`!');
+        if (config.DEBUG) bot.channels.get(config.TEXT_CH).sendMessage('I am ready, running version `' + bot.versionInfo.version + '`!');
     });
 
     if (!bot.guilds.has(config.SERVER_ID)) {
@@ -186,7 +205,44 @@ function processCommand(message, command, args) {
         case 'radio':
         case 'rv':
             (function () {
-                respond(message, "Running DiscordRadio by DerAtrox, Version: `" + version + "`.\nAktuellster Commit: https://github.com/DerAtrox/DiscordRadio/commit/" + version);
+                let embed = new Discord.RichEmbed({
+                    author: {
+                        name: server.name,
+                        icon_url: server.iconURL,
+                        url: 'http://bronies.de/'
+                    },
+                    thumbnail: {
+                        url: bot.user.avatarURL
+                    },
+                    title: `DerAtrox/DiscordRadio@` + bot.versionInfo.version,
+                    description: 'Umgesetzt mit Hilfe von [Node.js](https://nodejs.org/), [discord.js](https://discord.js.org/) und [node-icy](https://github.com/TooTallNate/node-icy).',
+                    fields: [
+                        {
+                            name: 'Version',
+                            value: bot.versionInfo.version,
+                            inline: true
+                        },
+                        {
+                            name: 'Letzter Commit',
+                            value: 'https://github.com/DerAtrox/DiscordRadio/commit/' + bot.versionInfo.version,
+                            inline: true
+                        }
+                    ],
+                    color: 0x610C12
+                });
+
+                if('message' in bot.versionInfo) {
+                    embed.addField('Letzte Commitnachricht', bot.versionInfo.message, true);
+                }
+
+                if('timestamp' in bot.versionInfo) {
+                    embed.addField('Erstellt', (moment(bot.versionInfo.timestamp).locale('de').fromNow()), true);
+                }
+
+                message.channel.sendEmbed(embed);
+
+
+
             })();
             break;
         case 'nowplaying':
@@ -271,7 +327,7 @@ function processCommand(message, command, args) {
                 setTimeout(() => {
                     prTimeout = false;
                 }, 60000 * 5);
-                
+
                 try {
                     vconnection.disconnect();
                 } catch (e) {
