@@ -66,33 +66,15 @@ bot.on('ready', function () {
 });
 
 function playRadio() {
-    endManual = true;
-    bot.voiceConnections.filter((connection) => {
-        return connection.channel.guild.id == config.SERVER_ID;
-    }).forEach((connection) => {
-        connection.disconnect();
-    });
-    endManual = false;
-
     const streamOptions = {volume: 0.1};
 
     const channel = server.channels.get(config.VOICE_CH);
 
     channel.join().then(function (connection) {
-        let disconnectTriggerd = false;
-
         console.log(getDateTime() + 'Voice connect');
 
         connection.on('disconnect', function () {
-            console.log(getDateTime() + 'Voice disconnect');
-
-            if (disconnectTriggerd || endManual) return;
-
-            disconnectTriggerd = true;
-
-            setTimeout(function () {
-                playRadio();
-            }, 2000);
+            process.exit();
         });
 
         connection.on('error', function (err) {
@@ -308,37 +290,10 @@ function processCommand(message, command, args) {
                     return respond(message, 'Nicht genügend Rechte!', true, false);
                 }
 
-                if (server.roles.exists('name', config.PLAYRADIO_MINRANK_FORCE)) {
-                    if (server.members.get(message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK_FORCE)) >= 0) {
-                        try {
-                            vconnection.disconnect();
-                        } catch (e) {
-                            console.log(getDateTime() + 'Could not disconnect voice. Trying playRadio');
-                            playRadio();
-                        }
-                        console.log(getDateTime() + '!pr: Stream restarted Mod by ' + message.author.username + '#' + message.author.discriminator);
-                        return respond(message, 'Radio Stream wird neugestartet.', true, false);
-                    }
-                }
-
-                if (prTimeout) {
-                    return respond(message, 'Radio Stream wurde bereits vor kurzem neugestartet, versuche es bitte später erneut.', true, false);
-                }
-
-                prTimeout = true;
-                setTimeout(() => {
-                    prTimeout = false;
-                }, 60000 * 5);
-
-                try {
-                    vconnection.disconnect();
-                } catch (e) {
-                    console.log(getDateTime() + 'Could not disconnect voice. Trying playRadio');
-                    playRadio();
-                }
-
                 console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
-                return respond(message, 'Radio Stream wird neugestartet.', true, false);
+                respond(message, 'Radio Stream wird neugestartet.', true, false);
+
+                process.exit();
             })();
             break;
     }
