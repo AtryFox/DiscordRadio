@@ -293,7 +293,9 @@ function processCommand(message, command, args) {
                 console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
                 respond(message, 'Radio Stream wird neugestartet.', true, false);
 
-                process.exit();
+                setTimeout(() => {
+                    process.exit();
+                }, 2000);
             })();
             break;
     }
