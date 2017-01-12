@@ -8,9 +8,7 @@ let Discord = require('discord.js'),
     exec = require('child_process').exec,
     vconnection = null,
     stream = null,
-    meta = null,
-    endManual = false,
-    prTimeout = false;
+    meta = null;
 
 /* VERSION */
 function getVersion(callback) {
@@ -271,31 +269,6 @@ function processCommand(message, command, args) {
 
                     return respond(message, text, false);
                 });
-            })();
-            break;
-        case 'playradio':
-        case 'pr':
-            (function () {
-                if (!server.members.has(message.author.id)) {
-                    console.log(getDateTime() + '!pr: Nutzer nicht Member des Servers! ' + message.author.username + '#' + message.author.discriminator);
-                    return;
-                }
-
-                if (!server.roles.exists('name', config.PLAYRADIO_MINRANK)) {
-                    console.log(getDateTime() + '!pr: Rang nicht gefunden! ' + config.PLAYRADIO_MINRANK);
-                    return;
-                }
-
-                if (server.members.get(message.author.id).highestRole.comparePositionTo(server.roles.find('name', config.PLAYRADIO_MINRANK)) < 0) {
-                    return respond(message, 'Nicht genügend Rechte!', true, false);
-                }
-
-                console.log(getDateTime() + '!pr: Stream restarted by ' + message.author.username + '#' + message.author.discriminator);
-                respond(message, 'Radio Stream wird neugestartet.', true, false);
-
-                setTimeout(() => {
-                    process.exit();
-                }, 2000);
             })();
             break;
     }
