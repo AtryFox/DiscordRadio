@@ -1,6 +1,9 @@
 let Discord = require('discord.js'),
     config = require('./config'),
     moment = require('moment'),
+    axios = require('axios'),
+    YouTube = require('youtube-node'),
+    youTube = new YouTube(),
     token = config.TOKEN,
     bot = new Discord.Client(),
     server,
@@ -10,13 +13,20 @@ let Discord = require('discord.js'),
     stream = null,
     meta = null;
 
+youTube.setKey(config.YOUTUBE_KEY);
+youTube.addParam('type', 'video');
+
+bot.log = (msg) => {
+    console.log(`[${moment().format("YYYY-MM-DD HH:mm:ss")}] ${msg}`);
+};
+
 /* VERSION */
 function getVersion(callback) {
     let info = {};
 
     exec('git rev-parse --short=4 HEAD', function (error, version) {
         if (error) {
-            bot.log('Error getting version', error);
+            bot.log('Error getting version: ' + error);
             info.version = 'unknown';
         } else {
             info.version = version.trim();
@@ -24,14 +34,14 @@ function getVersion(callback) {
 
         exec('git log -1 --pretty=%B', function (error, message) {
             if (error) {
-                bot.log('Error getting commit message', error);
+                bot.log('Error getting commit message: ' + error);
             } else {
                 info.message = message.trim();
             }
 
             exec('git log -1 --date=short --pretty=format:%ci', function (error, timestamp) {
                 if (error) {
-                    console.log('Error getting creation time', error);
+                    bot.log('Error getting creation time: ' + error);
                 } else {
                     info.timestamp = timestamp;
                 }
@@ -45,7 +55,7 @@ function getVersion(callback) {
 /* BOT EVENTS */
 bot.on('ready', function () {
     online();
-    console.log(getDateTime() + 'I am ready!');
+    bot.log('I am ready!');
     getVersion(info => {
         bot.versionInfo = info;
         bot.user.setGame('version ' + bot.versionInfo.version);
@@ -54,7 +64,7 @@ bot.on('ready', function () {
     });
 
     if (!bot.guilds.has(config.SERVER_ID)) {
-        console.log('Bot is not connected to the selected server!');
+        bot.log('Bot is not connected to the selected server!');
         process.exit();
     }
 
@@ -69,14 +79,14 @@ function playRadio() {
     const channel = server.channels.get(config.VOICE_CH);
 
     channel.join().then(function (connection) {
-        console.log(getDateTime() + 'Voice connect');
+        bot.log('Voice connect');
 
         connection.on('disconnect', function () {
             process.exit();
         });
 
         connection.on('error', function (err) {
-            console.log(getDateTime() + 'Voice error ' + err);
+            bot.log('Voice error ' + err);
         });
 
         const icy = require('icy');
@@ -87,7 +97,7 @@ function playRadio() {
 
         icy.get(opts, function (res) {
 
-            if (config.DEBUG) console.log(res.headers);
+            if (config.DEBUG) bot.log(JSON.stringify(res.headers));
 
             res.on('metadata', function (metadata) {
                 meta = icy.parse(metadata);
@@ -97,23 +107,23 @@ function playRadio() {
             stream = connection.playStream(res, streamOptions);
 
             stream.on('start', function () {
-                console.log(getDateTime() + 'Stream started');
+                bot.log('Stream started');
             });
 
             stream.on('end', function () {
                 connection.disconnect();
-                console.log(getDateTime() + 'Stream ended');
+                bot.log('Stream ended');
             });
 
             stream.on('error', function (error) {
-                console.log(getDateTime() + 'Stream error ');
-                console.log(error);
+                bot.log('Stream error ');
+                bot.log(error);
             });
         });
 
         vconnection = connection;
     })
-        .catch(console.error);
+        .catch(bot.log);
 }
 
 function onMessage(message) {
@@ -213,16 +223,15 @@ function processCommand(message, command, args) {
                     color: 0x610C12
                 });
 
-                if('message' in bot.versionInfo) {
+                if ('message' in bot.versionInfo) {
                     embed.addField('Letzte Commitnachricht', bot.versionInfo.message, true);
                 }
 
-                if('timestamp' in bot.versionInfo) {
+                if ('timestamp' in bot.versionInfo) {
                     embed.addField('Erstellt', (moment(bot.versionInfo.timestamp, 'YYYY-MM-DD HH:mm:ss Z').locale('de').fromNow()), true);
                 }
 
                 message.channel.sendEmbed(embed);
-
 
 
             })();
@@ -249,26 +258,48 @@ function processCommand(message, command, args) {
                     text = '🎶 Derzeit läuft **' + meta + '**.';
                 }
 
-                const YouTube = require('youtube-node');
-
-                const youTube = new YouTube();
-
-                youTube.setKey(config.YOUTUBE_KEY);
-
-                youTube.addParam('type', 'video');
-                youTube.search(meta.StreamTitle.replace(' - ', ' '), 1, function (error, result) {
-                    if (error) {
-                        console.log(error);
+                function getMetaData(callback) {
+                    if (config.DATA != '') {
+                        axios.get(config.DATA)
+                            .then((res) => {
+                                return callback(res.data.result);
+                            })
+                            .catch((err) => {
+                                bot.log(err);
+                                return callback('');
+                            })
+                    } else {
+                        callback('');
                     }
-                    else {
-                        if (result.items.length == 1) {
-                            text += "\n\nAuf YouTube anhören: https://www.youtube.com/watch?v=" + result.items[0].id.videoId;
-                            if (config.DEBUG) console.log(JSON.stringify(result, null, 2));
+                }
+
+                getMetaData(data => {
+                    if (data != '') {
+                        text += `\n\n ${(data.upvotes - data.downvotes)} ♥ | ${data.listener} 👥`;
+                    }
+
+                    youTube.search(meta.StreamTitle.replace(' - ', ' '), 1, function (error, result) {
+                        if (error) {
+                            bot.log(error);
+                        } else {
+                            if (result.items.length == 1) {
+                                if (data == '') {
+                                    text += '\n\n';
+                                } else {
+                                    text += ' | '
+                                }
+
+                                text += "Auf YouTube anhören:  https://youtu.be/" + result.items[0].id.videoId;
+
+                                if (config.DEBUG) bot.log(JSON.stringify(result, null, 2));
+                            }
                         }
-                    }
 
-                    return respond(message, text, false);
+                        return respond(message, text, false);
+                    });
                 });
+
+
             })();
             break;
     }
@@ -282,10 +313,6 @@ process.on('SIGINT', function () {
     process.exit();
 
 });
-
-function getDateTime() {
-    return "[" + new Date().toLocaleString() + "] ";
-}
 
 function idle() {
     bot.user.setStatus('idle');

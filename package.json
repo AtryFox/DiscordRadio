@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Discord server radio bot for Bronies.de",
   "dependencies": {
+    "axios": "^0.15.3",
     "discord.js": "^11.0.0",
     "erlpack": "github:hammerandchisel/erlpack#master",
     "icy": "^2.1.0",
