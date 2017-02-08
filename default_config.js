@@ -9,10 +9,6 @@ module.exports = {
     VOICE_CH: '',
     // URL TO RADIO STREAM (Icecast/SHOUTcast)
     STREAM: '',
-    // OPTIONAL JSON DATA USED BY !np
-    // STRUCTUE:
-    // {"status":"","result":{"title":"","artist":"","listener":0,"status":"","current_event":"","upvotes":0,"downvotes":0}}
-    DATA: '',
     // YOUTUBE DATA API KEY
     YOUTUBE_KEY: '',
     // USERAGENT TO USE FOR CONNECTION
