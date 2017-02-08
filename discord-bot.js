@@ -230,6 +230,10 @@ function processCommand(message, command, args) {
         case 'nowplaying':
         case 'np':
             (function () {
+                if(config.DISABLENP) {
+                    return;
+                }
+
                 if (vconnection == null) {
                     respond(message, 'Der Stream ist aktuell nicht aktiv!', false);
                     return;

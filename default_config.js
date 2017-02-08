@@ -9,6 +9,8 @@ module.exports = {
     VOICE_CH: '',
     // URL TO RADIO STREAM (Icecast/SHOUTcast)
     STREAM: '',
+    // DISABLE NP COMMAND
+    DISABLENP: false,
     // YOUTUBE DATA API KEY
     YOUTUBE_KEY: '',
     // USERAGENT TO USE FOR CONNECTION
