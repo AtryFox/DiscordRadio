@@ -48,9 +48,8 @@ bot.on('ready', function () {
     console.log(getDateTime() + 'I am ready!');
     getVersion(info => {
         bot.versionInfo = info;
-        bot.user.setGame('version ' + bot.versionInfo.version);
 
-        if (config.DEBUG) bot.channels.get(config.TEXT_CH).sendMessage('I am ready, running version `' + bot.versionInfo.version + '`!');
+        if (config.DEBUG) bot.channels.get(config.TEXT_CH).send('I am ready, running version `' + bot.versionInfo.version + '`!');
     });
 
     if (!bot.guilds.has(config.SERVER_ID)) {
@@ -91,7 +90,7 @@ function playRadio() {
 
             res.on('metadata', function (metadata) {
                 meta = icy.parse(metadata);
-                bot.user.setGame(meta.StreamTitle);
+                bot.user.setPresence({ game: { name: meta.StreamTitle, type: 0 } });
             });
 
             stream = connection.playStream(res, streamOptions);
@@ -145,7 +144,7 @@ function onMessage(message) {
         if (server.members.has(message.author.id)) {
             handleCommand();
         } else {
-            return message.channel.sendMessage('You have to be member ' + server.name + '!');
+            return message.channel.send('You have to be member ' + server.name + '!');
         }
     }
 }
@@ -169,12 +168,12 @@ function respond(message, response, mention, pm) {
     }
 
     if (pm) {
-        message.author.sendMessage(response);
+        message.author.send(response);
     } else {
         if (mention) {
             message.reply(response);
         } else {
-            message.channel.sendMessage(response);
+            message.channel.send(response);
         }
     }
 }
@@ -221,7 +220,7 @@ function processCommand(message, command, args) {
                     embed.addField('Erstellt', (moment(bot.versionInfo.timestamp, 'YYYY-MM-DD HH:mm:ss Z').locale('de').fromNow()), true);
                 }
 
-                message.channel.sendEmbed(embed);
+                message.channel.send({embed});
 
 
 
