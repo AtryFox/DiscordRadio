@@ -90,6 +90,7 @@ function playRadio() {
 
             res.on('metadata', function (metadata) {
                 meta = icy.parse(metadata);
+                //bot.user.setGame(meta.StreamTitle);
                 bot.user.setPresence({ game: { name: meta.StreamTitle, type: 0 } });
             });
 
